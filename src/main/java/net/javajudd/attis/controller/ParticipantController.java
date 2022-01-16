@@ -2,6 +2,7 @@ package net.javajudd.attis.controller;
 
 import net.javajudd.attis.domain.Participant;
 import net.javajudd.attis.repository.ParticipantRepository;
+import net.javajudd.attis.service.AWSService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +20,9 @@ public class ParticipantController {
     @Autowired
     ParticipantRepository participantRepository;
 
+    @Autowired
+    AWSService aws;
+
     @GetMapping({"","/"})
     public String index(Participant participant) {
         return "participant/add-participant";
@@ -31,6 +35,7 @@ public class ParticipantController {
         }
 
         participantRepository.save(participant);
+        aws.createIamUser(participant);
         return "redirect:/participant/registered";
     }
 
