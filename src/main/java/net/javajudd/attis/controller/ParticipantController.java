@@ -36,6 +36,7 @@ public class ParticipantController {
 
         participantRepository.save(participant);
         aws.createIamUser(participant);
+        participantRepository.save(participant);
         return "redirect:/participant/registered";
     }
 

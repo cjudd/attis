@@ -1,6 +1,8 @@
 package net.javajudd.attis.service;
 
 import net.javajudd.attis.domain.Participant;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
@@ -15,8 +17,17 @@ import software.amazon.awssdk.services.iam.model.GetUserResponse;
 import software.amazon.awssdk.services.iam.model.Tag;
 import software.amazon.awssdk.services.iam.waiters.IamWaiter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class AWSService {
+
+    @Value("${aws.account.url}")
+    String awsUrl;
+
+    @Autowired
+    MailService mailService;
 
     public void createIamUser(Participant participant) {
         IamClient iam = IamClient.builder()
@@ -48,7 +59,15 @@ public class AWSService {
         CreateAccessKeyRequest keyRequest = CreateAccessKeyRequest.builder().userName(participant.getInitials()).build();
         CreateAccessKeyResponse accessKeyResponse = iam.createAccessKey(keyRequest);
 
+        participant.setAccess(accessKeyResponse.accessKey().accessKeyId());
+        participant.setSecret(accessKeyResponse.accessKey().secretAccessKey());
+
         AddUserToGroupRequest groupRequest = AddUserToGroupRequest.builder().groupName("developers").userName(participant.getInitials()).build();
         iam.addUserToGroup(groupRequest);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("participant", participant);
+        map.put("url", awsUrl);
+        mailService.sendTemplateMessage(participant.getEmail(), "AWS Training Registration", "registration", map);
     }
 }
