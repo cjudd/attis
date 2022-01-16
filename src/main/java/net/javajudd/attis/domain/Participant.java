@@ -17,10 +17,10 @@ public class Participant {
     private Long id;
     @NotBlank(message = "Name is mandatory")
     private String name;
-//    @NotBlank(message = "Initials are mandatory")
-//    private String initials;
+    @NotBlank(message = "Initials are mandatory")
+    private String initials;
     @NotBlank(message = "Email is mandatory")
     private String email;
-//    @NotBlank(message = "Company is mandatory")
-//    private String company;
+    @NotBlank(message = "Company is mandatory")
+    private String company;
 }
