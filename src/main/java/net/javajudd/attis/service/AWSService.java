@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.iam.IamClient;
 import software.amazon.awssdk.services.iam.model.AddUserToGroupRequest;
 import software.amazon.awssdk.services.iam.model.CreateAccessKeyRequest;
 import software.amazon.awssdk.services.iam.model.CreateAccessKeyResponse;
+import software.amazon.awssdk.services.iam.model.CreateLoginProfileRequest;
 import software.amazon.awssdk.services.iam.model.CreateUserRequest;
 import software.amazon.awssdk.services.iam.model.CreateUserResponse;
 import software.amazon.awssdk.services.iam.model.GetUserRequest;
@@ -19,6 +20,8 @@ import software.amazon.awssdk.services.iam.waiters.IamWaiter;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 @Service
 public class AWSService {
@@ -42,7 +45,6 @@ public class AWSService {
 
         CreateUserRequest request = CreateUserRequest.builder()
                 .userName(participant.getInitials())
-
                 .tags(name, company, email)
                 .build();
 
@@ -61,6 +63,16 @@ public class AWSService {
 
         participant.setAccess(accessKeyResponse.accessKey().accessKeyId());
         participant.setSecret(accessKeyResponse.accessKey().secretAccessKey());
+
+        String password = randomAlphanumeric(12);
+        CreateLoginProfileRequest loginProfileRequest = CreateLoginProfileRequest.builder()
+                .userName(participant.getInitials())
+                .password(password)
+                .passwordResetRequired(false).build();
+
+        iam.createLoginProfile(loginProfileRequest);
+
+        participant.setPassword(password);
 
         AddUserToGroupRequest groupRequest = AddUserToGroupRequest.builder().groupName("developers").userName(participant.getInitials()).build();
         iam.addUserToGroup(groupRequest);
