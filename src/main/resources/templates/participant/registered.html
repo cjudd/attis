@@ -1,5 +1,20 @@
-<p>You are registered. Check your email for details.</p>
+<html>
+<head>
+    <style type="text/css">
+        body {
+            margin: 10px auto;
+            max-width: 800px;
+            padding: 20px 12px 10px 20px;
+            font: 13px "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <img th:src="@{/images/attis.png}">
+    <p>You are registered. Check your email for details.</p>
 
-<p>Note: If you don't see an email check your spam folders.</p>
+    <p>Note: If you don't see an email check your spam folders.</p>
 
-<a th:href="@{/participant}">Register another participant.</a>
+    <a th:href="@{/participant}">Register another participant.</a>
+</body>
+</html>
