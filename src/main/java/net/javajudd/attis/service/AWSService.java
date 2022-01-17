@@ -21,7 +21,7 @@ import software.amazon.awssdk.services.iam.waiters.IamWaiter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
+import static net.javajudd.attis.utils.PasswordUtil.generatePassword;
 
 @Service
 public class AWSService {
@@ -64,7 +64,7 @@ public class AWSService {
         participant.setAccess(accessKeyResponse.accessKey().accessKeyId());
         participant.setSecret(accessKeyResponse.accessKey().secretAccessKey());
 
-        String password = randomAlphanumeric(12);
+        String password = generatePassword();
         CreateLoginProfileRequest loginProfileRequest = CreateLoginProfileRequest.builder()
                 .userName(participant.getInitials())
                 .password(password)

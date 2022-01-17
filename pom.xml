@@ -71,8 +71,9 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
+			<groupId>org.passay</groupId>
+			<artifactId>passay</artifactId>
+			<version>1.6.1</version>
 		</dependency>
 
 		<dependency>
