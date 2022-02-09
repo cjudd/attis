@@ -44,4 +44,7 @@ atlassian-ide-plugin.xml
 
 # VS Code
 .vscode/
+
+# custom
 /src/main/resources/application-local.properties
+run.sh
