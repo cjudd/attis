@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
+import software.amazon.awssdk.services.ec2.model.InstanceType;
+import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
 import software.amazon.awssdk.services.iam.IamClient;
 import software.amazon.awssdk.services.iam.model.AddUserToGroupRequest;
 import software.amazon.awssdk.services.iam.model.CreateAccessKeyRequest;
@@ -81,5 +86,44 @@ public class AWSService {
         map.put("participant", participant);
         map.put("url", awsUrl);
         mailService.sendTemplateMessage(participant.getEmail(), "AWS Training Registration", "registration", map);
+    }
+
+    public void createDevVM(Participant participant) {
+        String amiId = "ami-0b59d313feafc34cf"; // dev-base image
+        Ec2Client ec2 = Ec2Client.builder()
+                .region(Region.US_EAST_2)
+                .build();
+
+        RunInstancesRequest runRequest = RunInstancesRequest.builder()
+                .imageId(amiId)
+                .instanceType(InstanceType.T3_LARGE)
+                .maxCount(1)
+                .minCount(1)
+                .keyName("dev-key")
+                .securityGroups("devvm-default-sg")
+                .build();
+
+        RunInstancesResponse response = ec2.runInstances(runRequest);
+        String instanceId = response.instances().get(0).instanceId();
+
+        software.amazon.awssdk.services.ec2.model.Tag tag = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                .key("Name").value(participant.getInitials() + "-dev")
+                .build();
+        software.amazon.awssdk.services.ec2.model.Tag name = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                .key("Participant").value(participant.getName())
+                .build();
+        software.amazon.awssdk.services.ec2.model.Tag company = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                .key("Company").value(participant.getCompany())
+                .build();
+        software.amazon.awssdk.services.ec2.model.Tag email = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                .key("Email").value(participant.getEmail())
+                .build();
+
+        CreateTagsRequest tagRequest = CreateTagsRequest.builder()
+                .resources(instanceId)
+                .tags(tag, name, company, email)
+                .build();
+
+        ec2.createTags(tagRequest);
     }
 }
