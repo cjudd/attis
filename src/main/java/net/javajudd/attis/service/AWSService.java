@@ -34,6 +34,9 @@ public class AWSService {
     @Value("${aws.account.url}")
     String awsUrl;
 
+    @Value("${aws.dev.ami}")
+    String awsDevAmi;
+
     @Autowired
     MailService mailService;
 
@@ -89,13 +92,12 @@ public class AWSService {
     }
 
     public void createDevVM(Participant participant) {
-        String amiId = "ami-0b59d313feafc34cf"; // dev-base image
         Ec2Client ec2 = Ec2Client.builder()
                 .region(Region.US_EAST_2)
                 .build();
 
         RunInstancesRequest runRequest = RunInstancesRequest.builder()
-                .imageId(amiId)
+                .imageId(awsDevAmi)
                 .instanceType(InstanceType.T3_LARGE)
                 .maxCount(1)
                 .minCount(1)
