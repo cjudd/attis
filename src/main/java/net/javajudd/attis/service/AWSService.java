@@ -1,5 +1,6 @@
 package net.javajudd.attis.service;
 
+import lombok.extern.slf4j.Slf4j;
 import net.javajudd.attis.domain.Participant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,7 @@ import java.util.Map;
 import static net.javajudd.attis.utils.PasswordUtil.generatePassword;
 
 @Service
+@Slf4j
 public class AWSService {
 
     @Value("${aws.account.url}")
@@ -85,10 +87,14 @@ public class AWSService {
         AddUserToGroupRequest groupRequest = AddUserToGroupRequest.builder().groupName("developers").userName(participant.getInitials()).build();
         iam.addUserToGroup(groupRequest);
 
+        log.info("Participant {} ({}) and email {} created.", participant.getInitials(), participant.getName(), participant.getEmail());
+
         Map<String, Object> map = new HashMap<>();
         map.put("participant", participant);
         map.put("url", awsUrl);
         mailService.sendTemplateMessage(participant.getEmail(), "AWS Training Registration", "registration", map);
+
+        log.info("Participant registration email sent to {} ({}) at {}", participant.getInitials(), participant.getName(), participant.getEmail());
     }
 
     public void createDevVM(Participant participant) {
@@ -107,6 +113,7 @@ public class AWSService {
 
         RunInstancesResponse response = ec2.runInstances(runRequest);
         String instanceId = response.instances().get(0).instanceId();
+        log.info("Run EC2 Dev Instance {} for {} ({})", instanceId, participant.getInitials(), participant.getName());
 
         software.amazon.awssdk.services.ec2.model.Tag tag = software.amazon.awssdk.services.ec2.model.Tag.builder()
                 .key("Name").value(participant.getInitials() + "-dev")
