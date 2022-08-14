@@ -24,7 +24,7 @@ java -Daws.account.url=<account url> -Dspring.mail.username=<mail username> -Dsp
 ```
 ### Docker Image
 ```
-./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=javajudd/attis
+./mvnw spring-boot:build-image
 ```
 ### Run Docker Container
 ```

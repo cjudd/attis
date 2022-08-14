@@ -16,6 +16,7 @@
 
 	<properties>
 		<java.version>11</java.version>
+		<spring-boot.build-image.imageName>javajudd/attis:${project.version}</spring-boot.build-image.imageName>
 	</properties>
 
 	<dependencyManagement>
