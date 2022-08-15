@@ -30,6 +30,12 @@ java -Daws.account.url=<account url> -Dspring.mail.username=<mail username> -Dsp
 ```
 docker run --rm -it -p80:8080 -e AWS_ACCESS_KEY_ID=<access key> -e AWS_SECRET_ACCESS_KEY=<secret key> -e AWS_ACCOUNT_URL=<account url> -e SPRING_MAIL_USERNAME=<mail user> -e SPRING_MAIL_PASSWORD=<mail password> -e MESSAGE.SEND.FROM=<efrom email>  javajudd/attis
 ```
+### Push Docker Image to hub.docker.com
+```
+docker push javajudd/attis:<version>
+docker tag javajudd/attis:<version> javajudd/attis:latest
+docker push javajudd/attis:latest
+```
 
 ### Example root user
 ```
