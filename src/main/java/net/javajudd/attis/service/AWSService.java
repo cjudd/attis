@@ -27,14 +27,12 @@ import software.amazon.awssdk.services.iam.waiters.IamWaiter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.String.format;
 import static net.javajudd.attis.utils.PasswordUtil.generatePassword;
 
 @Service
 @Slf4j
 public class AWSService {
-
-    @Value("${aws.account.url}")
-    String awsUrl;
 
     @Value("${aws.dev.ami}")
     String awsDevAmi;
@@ -86,6 +84,9 @@ public class AWSService {
 
         AddUserToGroupRequest groupRequest = AddUserToGroupRequest.builder().groupName("developers").userName(participant.getInitials()).build();
         iam.addUserToGroup(groupRequest);
+
+        String awsAlias = iam.listAccountAliases().accountAliases().get(0);
+        String awsUrl = format("https://%s.signin.aws.amazon.com/console/", awsAlias);
 
         log.info("Participant {} ({}) and email {} created.", participant.getInitials(), participant.getName(), participant.getEmail());
 
