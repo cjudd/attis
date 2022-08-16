@@ -4,7 +4,6 @@
 .DS_Store
 .settings
 .springBeans
-bin
 build.sh
 integration-repo
 ivy-cache
