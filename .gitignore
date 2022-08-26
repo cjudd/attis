@@ -47,3 +47,4 @@ atlassian-ide-plugin.xml
 # custom
 /src/main/resources/application-local.properties
 run.sh
+secrets.json
