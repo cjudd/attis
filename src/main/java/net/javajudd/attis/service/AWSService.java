@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.BlockDeviceMapping;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
+import software.amazon.awssdk.services.ec2.model.EbsBlockDevice;
+import software.amazon.awssdk.services.ec2.model.HibernationOptionsRequest;
 import software.amazon.awssdk.services.ec2.model.InstanceType;
 import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
 import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
@@ -99,41 +102,54 @@ public class AWSService {
     }
 
     public void createDevVM(Participant participant) {
-        Ec2Client ec2 = Ec2Client.builder()
-                .region(Region.US_EAST_2)
-                .build();
+        if(awsDevAmi != null && !awsDevAmi.isEmpty()) {
+            Ec2Client ec2 = Ec2Client.builder()
+                    .region(Region.US_EAST_2)
+                    .build();
 
-        RunInstancesRequest runRequest = RunInstancesRequest.builder()
-                .imageId(awsDevAmi)
-                .instanceType(InstanceType.T3_LARGE)
-                .maxCount(1)
-                .minCount(1)
-                .keyName("dev-key")
-                .securityGroups("devvm-default-sg")
-                .build();
+            RunInstancesRequest runRequest = RunInstancesRequest.builder()
+                    .imageId(awsDevAmi)
+                    .instanceType(InstanceType.T3_LARGE)
+                    .maxCount(1)
+                    .minCount(1)
+                    .keyName("dev-key")
+                    .blockDeviceMappings(BlockDeviceMapping.builder()
+                            .deviceName("/dev/xvda")
+                            .ebs(EbsBlockDevice.builder()
+                                    .volumeSize(40)
+                                    .deleteOnTermination(true)
+                                    .encrypted(true)
+                                    .build())
+                            .build())
+                    .hibernationOptions(HibernationOptionsRequest.builder().configured(true).build())
+                    .securityGroups("devvm-default-sg")
+                    .build();
 
-        RunInstancesResponse response = ec2.runInstances(runRequest);
-        String instanceId = response.instances().get(0).instanceId();
-        log.info("Run EC2 Dev Instance {} for {} ({})", instanceId, participant.getInitials(), participant.getName());
+            RunInstancesResponse response = ec2.runInstances(runRequest);
+            String instanceId = response.instances().get(0).instanceId();
+            log.info("Run EC2 Dev Instance {} for {} ({})", instanceId, participant.getInitials(), participant.getName());
 
-        software.amazon.awssdk.services.ec2.model.Tag tag = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                .key("Name").value(participant.getInitials() + "-dev")
-                .build();
-        software.amazon.awssdk.services.ec2.model.Tag name = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                .key("Participant").value(participant.getName())
-                .build();
-        software.amazon.awssdk.services.ec2.model.Tag company = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                .key("Company").value(participant.getCompany())
-                .build();
-        software.amazon.awssdk.services.ec2.model.Tag email = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                .key("Email").value(participant.getEmail())
-                .build();
+            software.amazon.awssdk.services.ec2.model.Tag tag = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                    .key("Name").value(participant.getInitials() + "-dev")
+                    .build();
+            software.amazon.awssdk.services.ec2.model.Tag name = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                    .key("Participant").value(participant.getName())
+                    .build();
+            software.amazon.awssdk.services.ec2.model.Tag company = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                    .key("Company").value(participant.getCompany())
+                    .build();
+            software.amazon.awssdk.services.ec2.model.Tag email = software.amazon.awssdk.services.ec2.model.Tag.builder()
+                    .key("Email").value(participant.getEmail())
+                    .build();
 
-        CreateTagsRequest tagRequest = CreateTagsRequest.builder()
-                .resources(instanceId)
-                .tags(tag, name, company, email)
-                .build();
+            CreateTagsRequest tagRequest = CreateTagsRequest.builder()
+                    .resources(instanceId)
+                    .tags(tag, name, company, email)
+                    .build();
 
-        ec2.createTags(tagRequest);
+            ec2.createTags(tagRequest);
+        } else {
+            log.info(format("No AMI specified for {}", participant.getInitials()));
+        }
     }
 }
