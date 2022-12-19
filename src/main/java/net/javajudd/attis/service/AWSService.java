@@ -1,5 +1,6 @@
 package net.javajudd.attis.service;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import net.javajudd.attis.domain.Participant;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +27,11 @@ import software.amazon.awssdk.services.iam.model.GetUserRequest;
 import software.amazon.awssdk.services.iam.model.GetUserResponse;
 import software.amazon.awssdk.services.iam.model.Tag;
 import software.amazon.awssdk.services.iam.waiters.IamWaiter;
+import software.amazon.awssdk.services.sfn.*;
+import software.amazon.awssdk.services.sfn.model.*;
+import com.google.gson.Gson;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.String.format;
 import static net.javajudd.attis.utils.PasswordUtil.generatePassword;
@@ -40,9 +43,48 @@ public class AWSService {
     @Value("${aws.dev.ami}")
     String awsDevAmi;
 
+    String stepFunctionArn;
+
     @Autowired
     MailService mailService;
 
+    public void setStepFunctionArn(String arn) { stepFunctionArn = arn; }
+    public List<StateMachineListItem> getStateMachines() {
+        SfnClient client = SfnClient.builder()
+                .region(Region.US_EAST_2)
+                .build();
+
+        ListStateMachinesResponse stateMachinesResponse = client.listStateMachines();
+        List<StateMachineListItem> attisFunctions = new ArrayList<>();
+        for(StateMachineListItem function : stateMachinesResponse.stateMachines()) {
+            List<software.amazon.awssdk.services.sfn.model.Tag> tags = client.listTagsForResource(ListTagsForResourceRequest.builder().resourceArn(function.stateMachineArn()).build()).tags();
+            for(software.amazon.awssdk.services.sfn.model.Tag tag : tags) {
+                if (tag.key().equals("AttisFunction")) {
+                    attisFunctions.add(function);
+                }
+            }
+        }
+        return attisFunctions;
+    }
+
+    public void createIamUserSfn(Participant participant) {
+        SfnClient client = SfnClient.builder()
+                .region(Region.US_EAST_2)
+                .build();
+
+        String password = generatePassword();
+        participant.setPassword(password);
+        String participantJson = new Gson().toJson(participant);
+
+        StartExecutionRequest request = StartExecutionRequest.builder()
+                .name("AttisExecutionAttempt"+UUID.randomUUID().toString().substring(0,7))
+                .input("{\"userData\": "+participantJson+"}")
+                .stateMachineArn(stepFunctionArn)
+                .build();
+
+        StartExecutionResponse executionResponse = client.startExecution(request);
+
+    }
     public void createIamUser(Participant participant) {
         IamClient iam = IamClient.builder()
                 .region(Region.AWS_GLOBAL)
