@@ -1,35 +1,19 @@
 package net.javajudd.attis.service;
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import net.javajudd.attis.domain.Participant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2Client;
-import software.amazon.awssdk.services.ec2.model.BlockDeviceMapping;
-import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
-import software.amazon.awssdk.services.ec2.model.EbsBlockDevice;
-import software.amazon.awssdk.services.ec2.model.HibernationOptionsRequest;
-import software.amazon.awssdk.services.ec2.model.InstanceType;
-import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
-import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.iam.IamClient;
-import software.amazon.awssdk.services.iam.model.AddUserToGroupRequest;
-import software.amazon.awssdk.services.iam.model.CreateAccessKeyRequest;
-import software.amazon.awssdk.services.iam.model.CreateAccessKeyResponse;
-import software.amazon.awssdk.services.iam.model.CreateLoginProfileRequest;
-import software.amazon.awssdk.services.iam.model.CreateUserRequest;
-import software.amazon.awssdk.services.iam.model.CreateUserResponse;
-import software.amazon.awssdk.services.iam.model.GetUserRequest;
-import software.amazon.awssdk.services.iam.model.GetUserResponse;
-import software.amazon.awssdk.services.iam.model.Tag;
-import software.amazon.awssdk.services.iam.waiters.IamWaiter;
-import software.amazon.awssdk.services.sfn.*;
+import software.amazon.awssdk.services.sfn.SfnClient;
 import software.amazon.awssdk.services.sfn.model.*;
-import com.google.gson.Gson;
 
 import java.util.*;
 
@@ -67,7 +51,7 @@ public class AWSService {
         return attisFunctions;
     }
 
-    public void createIamUserSfn(Participant participant) {
+    public void createIamUser(Participant participant) throws InterruptedException {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
                 .build();
@@ -84,62 +68,37 @@ public class AWSService {
 
         StartExecutionResponse executionResponse = client.startExecution(request);
 
+        DescribeExecutionRequest describeRequest = DescribeExecutionRequest.builder().executionArn(executionResponse.executionArn()).build();
+
+        DescribeExecutionResponse describeResponse;
+        do {
+            Thread.sleep(1000);
+            describeResponse = client.describeExecution(describeRequest);
+
+        } while(describeResponse.status() == ExecutionStatus.RUNNING);
+        //Possibly add some logic if ExecutionStatus is Failing, Timed-out, etc.
+
+        JsonObject root = JsonParser.parseString(describeResponse.output()).getAsJsonObject();
+        participant.setAccess(root.getAsJsonObject("AccessKey").get("AccessKeyId").getAsString());
+        participant.setSecret(root.getAsJsonObject("AccessKey").get("SecretAccessKey").getAsString());
+
+        sendEmail(participant);
     }
-    public void createIamUser(Participant participant) {
+
+    public void sendEmail(Participant participant) {
         IamClient iam = IamClient.builder()
                 .region(Region.AWS_GLOBAL)
                 .build();
 
-        IamWaiter iamWaiter = iam.waiter();
-
-        Tag name = Tag.builder().key("Participant").value(participant.getName()).build();
-        Tag company = Tag.builder().key("Company").value(participant.getCompany()).build();
-        Tag email = Tag.builder().key("Email").value(participant.getEmail()).build();
-
-        CreateUserRequest request = CreateUserRequest.builder()
-                .userName(participant.getInitials())
-                .tags(name, company, email)
-                .build();
-
-        CreateUserResponse response = iam.createUser(request);
-
-        // Wait until the user is created
-        GetUserRequest userRequest = GetUserRequest.builder()
-                .userName(response.user().userName())
-                .build();
-
-        WaiterResponse<GetUserResponse> waitUntilUserExists = iamWaiter.waitUntilUserExists(userRequest);
-        waitUntilUserExists.matched().response().ifPresent(System.out::println);
-
-        CreateAccessKeyRequest keyRequest = CreateAccessKeyRequest.builder().userName(participant.getInitials()).build();
-        CreateAccessKeyResponse accessKeyResponse = iam.createAccessKey(keyRequest);
-
-        participant.setAccess(accessKeyResponse.accessKey().accessKeyId());
-        participant.setSecret(accessKeyResponse.accessKey().secretAccessKey());
-
-        String password = generatePassword();
-        CreateLoginProfileRequest loginProfileRequest = CreateLoginProfileRequest.builder()
-                .userName(participant.getInitials())
-                .password(password)
-                .passwordResetRequired(false).build();
-
-        iam.createLoginProfile(loginProfileRequest);
-
-        participant.setPassword(password);
-
-        AddUserToGroupRequest groupRequest = AddUserToGroupRequest.builder().groupName("developers").userName(participant.getInitials()).build();
-        iam.addUserToGroup(groupRequest);
-
         String awsAlias = iam.listAccountAliases().accountAliases().get(0);
         String awsUrl = format("https://%s.signin.aws.amazon.com/console/", awsAlias);
-
         log.info("Participant {} ({}) and email {} created.", participant.getInitials(), participant.getName(), participant.getEmail());
 
         Map<String, Object> map = new HashMap<>();
         map.put("participant", participant);
         map.put("url", awsUrl);
-        mailService.sendTemplateMessage(participant.getEmail(), "AWS Training Registration", "registration", map);
 
+        mailService.sendTemplateMessage(participant.getEmail(), "AWS Training Registration", "registration", map);
         log.info("Participant registration email sent to {} ({}) at {}", participant.getInitials(), participant.getName(), participant.getEmail());
     }
 

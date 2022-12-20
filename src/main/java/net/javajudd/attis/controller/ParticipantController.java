@@ -29,13 +29,13 @@ public class ParticipantController {
     }
 
     @PostMapping({"","/"})
-    public String addParticipant(@Valid Participant participant, BindingResult result, Model model) {
+    public String addParticipant(@Valid Participant participant, BindingResult result, Model model) throws InterruptedException {
         if (result.hasErrors()) {
             return "participant/add-participant";
         }
 
         participantRepository.save(participant);
-        aws.createIamUserSfn(participant);
+        aws.createIamUser(participant);
         //aws.createDevVM(participant);
         participantRepository.save(participant);
         return "redirect:/participant/registered";
