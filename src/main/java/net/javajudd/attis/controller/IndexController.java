@@ -13,19 +13,18 @@ public class IndexController {
 
     @Autowired
     AWSService awsService;
-    boolean initialized = false;
+
     @GetMapping()
     public String index(Model model) {
-        if(initialized) {
+        if(awsService.getStepFunctionArn() != null) {
             return "redirect:/participant";
         }
         model.addAttribute("stepFunctions", awsService.getStateMachines());
-        initialized = true;
         return "admin/initialization";
     }
 
     @PostMapping({"","/"})
-    public String selectStepFunction(@RequestParam(value="stateMachineArn") String stateMachineArn) {
+    public String initialize(@RequestParam(value="stateMachineArn") String stateMachineArn) {
         awsService.setStepFunctionArn(stateMachineArn);
         return "redirect:/participant";
     }

@@ -33,6 +33,8 @@ public class AWSService {
     MailService mailService;
 
     public void setStepFunctionArn(String arn) { stepFunctionArn = arn; }
+    public String getStepFunctionArn() { return stepFunctionArn; }
+
     public List<StateMachineListItem> getStateMachines() {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
