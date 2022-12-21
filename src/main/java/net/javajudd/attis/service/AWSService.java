@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.ec2.Ec2Client;
-import software.amazon.awssdk.services.ec2.model.*;
 import software.amazon.awssdk.services.iam.IamClient;
 import software.amazon.awssdk.services.sfn.SfnClient;
 import software.amazon.awssdk.services.sfn.model.*;
@@ -18,7 +16,6 @@ import software.amazon.awssdk.services.sfn.model.*;
 import java.util.*;
 
 import static java.lang.String.format;
-import static net.javajudd.attis.utils.PasswordUtil.generatePassword;
 
 @Service
 @Slf4j
@@ -60,9 +57,7 @@ public class AWSService {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
                 .build();
-
-        String password = generatePassword();
-        participant.setPassword(password);
+        
         String participantJson = new Gson().toJson(participant);
 
         StartExecutionRequest request = StartExecutionRequest.builder()
@@ -88,6 +83,7 @@ public class AWSService {
         JsonObject root = JsonParser.parseString(describeResponse.output()).getAsJsonObject();
         participant.setAccess(root.getAsJsonObject("AccessKey").get("AccessKeyId").getAsString());
         participant.setSecret(root.getAsJsonObject("AccessKey").get("SecretAccessKey").getAsString());
+        participant.setPassword(root.get("RandomPassword").getAsString());
 
         sendEmail(participant);
     }
@@ -110,54 +106,20 @@ public class AWSService {
     }
 
     public void createDevVM(Participant participant) {
-        if(awsDevAmi != null && !awsDevAmi.isEmpty()) {
-            Ec2Client ec2 = Ec2Client.builder()
-                    .region(Region.US_EAST_2)
-                    .build();
+        SfnClient client = SfnClient.builder()
+                .region(Region.US_EAST_2)
+                .build();
 
-            RunInstancesRequest runRequest = RunInstancesRequest.builder()
-                    .imageId(awsDevAmi)
-                    .instanceType(InstanceType.T3_LARGE)
-                    .maxCount(1)
-                    .minCount(1)
-                    .keyName("dev-key")
-                    .blockDeviceMappings(BlockDeviceMapping.builder()
-                            .deviceName("/dev/xvda")
-                            .ebs(EbsBlockDevice.builder()
-                                    .volumeSize(40)
-                                    .deleteOnTermination(true)
-                                    .encrypted(true)
-                                    .build())
-                            .build())
-                    .hibernationOptions(HibernationOptionsRequest.builder().configured(true).build())
-                    .securityGroups("devvm-default-sg")
-                    .build();
+        String participantJson = new Gson().toJson(participant);
 
-            RunInstancesResponse response = ec2.runInstances(runRequest);
-            String instanceId = response.instances().get(0).instanceId();
-            log.info("Run EC2 Dev Instance {} for {} ({})", instanceId, participant.getInitials(), participant.getName());
+        StartExecutionRequest request = StartExecutionRequest.builder()
+                .name("AttisExecutionAttempt"+UUID.randomUUID().toString().substring(0,7))
+                .input("{\"Participant\": "+participantJson+", \"DevAmi\": \""+awsDevAmi+"\"}")
+                .stateMachineArn(vmStepFunctionArn)
+                .build();
 
-            software.amazon.awssdk.services.ec2.model.Tag tag = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                    .key("Name").value(participant.getInitials() + "-dev")
-                    .build();
-            software.amazon.awssdk.services.ec2.model.Tag name = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                    .key("Participant").value(participant.getName())
-                    .build();
-            software.amazon.awssdk.services.ec2.model.Tag company = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                    .key("Company").value(participant.getCompany())
-                    .build();
-            software.amazon.awssdk.services.ec2.model.Tag email = software.amazon.awssdk.services.ec2.model.Tag.builder()
-                    .key("Email").value(participant.getEmail())
-                    .build();
+        StartExecutionResponse executionResponse = client.startExecution(request);
 
-            CreateTagsRequest tagRequest = CreateTagsRequest.builder()
-                    .resources(instanceId)
-                    .tags(tag, name, company, email)
-                    .build();
-
-            ec2.createTags(tagRequest);
-        } else {
-            log.info(format("No AMI specified for {}", participant.getInitials()));
-        }
+        //Could add describe request and do checks
     }
 }
