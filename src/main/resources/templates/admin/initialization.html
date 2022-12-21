@@ -10,17 +10,9 @@
     <ul class="form-style-1">
         <img th:src="@{/images/attis.png}"> Initialization
         <li>
-            <h2>IAM Step Function</h2>
-            <select th:name="iamStepFunctionArn">
-                <div th:each="function : ${iamStepFunctions}">
-                    <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
-                </div>
-            </select>
-        </li>
-        <li>
-            <h2>EC2 Step Function</h2>
-            <select th:name="vmStepFunctionArn">
-                <div th:each="function : ${vmStepFunctions}">
+            <h2>Step Function</h2>
+            <select th:name="StepFunctionArn">
+                <div th:each="function : ${StepFunctions}">
                     <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
                 </div>
             </select>
