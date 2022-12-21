@@ -25,7 +25,10 @@ public class ParticipantController {
 
     @GetMapping({"","/"})
     public String index(Participant participant) {
-        return "participant/add-participant";
+        if(aws.getVmStepFunctionArn() != null && aws.getIamStepFunctionArn() != null) {
+            return "participant/add-participant";
+        }
+        return "redirect:/init";
     }
 
     @PostMapping({"","/"})

@@ -27,15 +27,18 @@ public class AWSService {
     @Value("${aws.dev.ami}")
     String awsDevAmi;
 
-    String stepFunctionArn;
+    String iamStepFunctionArn;
+    String vmStepFunctionArn;
 
     @Autowired
     MailService mailService;
 
-    public void setStepFunctionArn(String arn) { stepFunctionArn = arn; }
-    public String getStepFunctionArn() { return stepFunctionArn; }
+    public void setVmStepFunctionArn(String arn) { vmStepFunctionArn = arn; }
+    public String getVmStepFunctionArn() { return iamStepFunctionArn; }
+    public void setIamStepFunctionArn(String arn) { iamStepFunctionArn = arn; }
+    public String getIamStepFunctionArn() { return iamStepFunctionArn; }
 
-    public List<StateMachineListItem> getStateMachines() {
+    public List<StateMachineListItem> getStateMachines(String tagKey) {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
                 .build();
@@ -45,7 +48,7 @@ public class AWSService {
         for(StateMachineListItem function : stateMachinesResponse.stateMachines()) {
             List<software.amazon.awssdk.services.sfn.model.Tag> tags = client.listTagsForResource(ListTagsForResourceRequest.builder().resourceArn(function.stateMachineArn()).build()).tags();
             for(software.amazon.awssdk.services.sfn.model.Tag tag : tags) {
-                if (tag.key().equals("AttisFunction")) {
+                if (tag.key().equals(tagKey)) {
                     attisFunctions.add(function);
                 }
             }
@@ -65,7 +68,7 @@ public class AWSService {
         StartExecutionRequest request = StartExecutionRequest.builder()
                 .name("AttisExecutionAttempt"+UUID.randomUUID().toString().substring(0,7))
                 .input("{\"userData\": "+participantJson+"}")
-                .stateMachineArn(stepFunctionArn)
+                .stateMachineArn(iamStepFunctionArn)
                 .build();
 
         StartExecutionResponse executionResponse = client.startExecution(request);
@@ -79,6 +82,8 @@ public class AWSService {
 
         } while(describeResponse.status() == ExecutionStatus.RUNNING);
         //Possibly add some logic if ExecutionStatus is Failing, Timed-out, etc.
+
+        client.close();
 
         JsonObject root = JsonParser.parseString(describeResponse.output()).getAsJsonObject();
         participant.setAccess(root.getAsJsonObject("AccessKey").get("AccessKeyId").getAsString());

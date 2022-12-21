@@ -16,17 +16,6 @@ public class IndexController {
 
     @GetMapping()
     public String index(Model model) {
-        if(awsService.getStepFunctionArn() != null) {
-            return "redirect:/participant";
-        }
-        model.addAttribute("stepFunctions", awsService.getStateMachines());
-        return "admin/initialization";
-    }
-
-    @PostMapping({"","/"})
-    public String initialize(@RequestParam(value="stateMachineArn") String stateMachineArn) {
-        awsService.setStepFunctionArn(stateMachineArn);
         return "redirect:/participant";
     }
-
 }

@@ -6,12 +6,21 @@
     <title>Attis Initialization</title>
 </head>
 <body>
-<form action="#" th:action="@{/}" method="post">
+<form action="#" th:action="@{/init}" method="post">
     <ul class="form-style-1">
         <img th:src="@{/images/attis.png}"> Initialization
         <li>
-            <select th:name="stateMachineArn">
-                <div th:each="function : ${stepFunctions}">
+            <h2>IAM Step Function</h2>
+            <select th:name="iamStepFunctionArn">
+                <div th:each="function : ${iamStepFunctions}">
+                    <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
+                </div>
+            </select>
+        </li>
+        <li>
+            <h2>EC2 Step Function</h2>
+            <select th:name="vmStepFunctionArn">
+                <div th:each="function : ${vmStepFunctions}">
                     <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
                 </div>
             </select>
