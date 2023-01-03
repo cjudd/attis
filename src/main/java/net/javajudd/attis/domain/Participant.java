@@ -23,7 +23,4 @@ public class Participant {
     private String email;
     @NotBlank(message = "Company is mandatory")
     private String company;
-    private String password;
-    private String access;
-    private String secret;
 }

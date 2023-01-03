@@ -3,8 +3,6 @@ package net.javajudd.attis.service;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import net.javajudd.attis.domain.Participant;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sfn.SfnClient;
@@ -17,13 +15,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class AWSService {
-
-    @Value("${aws.dev.ami}")
-    String awsDevAmi;
     String StepFunctionArn;
-
-    @Autowired
-    MailService mailService;
 
     public void setStepFunctionArn(String stepFunctionArn) { this.StepFunctionArn = stepFunctionArn; }
     public String getStepFunctionArn() { return StepFunctionArn; }
@@ -55,7 +47,7 @@ public class AWSService {
 
         StartExecutionRequest request = StartExecutionRequest.builder()
                 .name("AttisExecution"+UUID.randomUUID().toString().substring(0,7))
-                .input("{\"Participant\": "+participantJson+", \"DevAmi\": \""+awsDevAmi+"\"}")
+                .input("{\"Participant\": "+participantJson+"}")
                 .stateMachineArn(StepFunctionArn)
                 .build();
 
