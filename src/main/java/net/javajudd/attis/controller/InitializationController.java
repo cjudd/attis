@@ -18,16 +18,16 @@ public class InitializationController {
 
     @GetMapping
     public String initForm(Model model) {
-        if(awsService.getStepFunctionArn() != null) {
+        if(awsService.isStepFunctionArnInitialized()) {
             return "redirect:/participant";
         }
-        model.addAttribute("StepFunctions", awsService.getStateMachines("Cybele"));
+        model.addAttribute("stepFunctions", awsService.getStateMachines("Cybele"));
         return "admin/initialization";
     }
 
     @PostMapping()
-    public String initialize(@RequestParam(value="StepFunctionArn") String StepFunctionArn) {
-        awsService.setStepFunctionArn(StepFunctionArn);
+    public String initialize(@RequestParam(value="stepFunctionArn") String stepFunctionArn) {
+        awsService.setStepFunctionArn(stepFunctionArn);
         return "redirect:/participant";
     }
 }

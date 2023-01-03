@@ -11,8 +11,8 @@
         <img th:src="@{/images/attis.png}"> Initialization
         <li>
             <h2>Step Function</h2>
-            <select th:name="StepFunctionArn">
-                <div th:each="function : ${StepFunctions}">
+            <select th:name="stepFunctionArn">
+                <div th:each="function : ${stepFunctions}">
                     <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
                 </div>
             </select>

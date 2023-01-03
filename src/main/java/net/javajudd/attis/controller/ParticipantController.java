@@ -25,7 +25,7 @@ public class ParticipantController {
 
     @GetMapping({"","/"})
     public String index(Participant participant) {
-        if(aws.getStepFunctionArn() != null) {
+        if(aws.isStepFunctionArnInitialized()) {
             return "participant/add-participant";
         }
         return "redirect:/init";
@@ -38,7 +38,7 @@ public class ParticipantController {
         }
 
         participantRepository.save(participant);
-        aws.createUserAndVM(participant);
+        aws.executeStepFunction(participant);
         participantRepository.save(participant);
         return "redirect:/participant/registered";
     }

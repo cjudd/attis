@@ -6,39 +6,38 @@ import net.javajudd.attis.domain.Participant;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sfn.SfnClient;
-import software.amazon.awssdk.services.sfn.model.*;
+import software.amazon.awssdk.services.sfn.model.ListStateMachinesResponse;
+import software.amazon.awssdk.services.sfn.model.ListTagsForResourceRequest;
+import software.amazon.awssdk.services.sfn.model.StartExecutionRequest;
+import software.amazon.awssdk.services.sfn.model.StartExecutionResponse;
+import software.amazon.awssdk.services.sfn.model.StateMachineListItem;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class AWSService {
-    String StepFunctionArn;
+    String stepFunctionArn;
 
-    public void setStepFunctionArn(String stepFunctionArn) { this.StepFunctionArn = stepFunctionArn; }
-    public String getStepFunctionArn() { return StepFunctionArn; }
-
+    public void setStepFunctionArn(String stepFunctionArn) { this.stepFunctionArn = stepFunctionArn; }
+    public Boolean isStepFunctionArnInitialized() { return stepFunctionArn != null; }
     public List<StateMachineListItem> getStateMachines(String tagKey) {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
                 .build();
 
         ListStateMachinesResponse stateMachinesResponse = client.listStateMachines();
-        List<StateMachineListItem> attisFunctions = new ArrayList<>();
-        for(StateMachineListItem function : stateMachinesResponse.stateMachines()) {
-            List<software.amazon.awssdk.services.sfn.model.Tag> tags = client.listTagsForResource(ListTagsForResourceRequest.builder().resourceArn(function.stateMachineArn()).build()).tags();
-            for(software.amazon.awssdk.services.sfn.model.Tag tag : tags) {
-                if (tag.key().equals(tagKey)) {
-                    attisFunctions.add(function);
-                }
-            }
-        }
-        return attisFunctions;
+
+        return stateMachinesResponse.stateMachines().stream().filter(machine ->
+                client.listTagsForResource(ListTagsForResourceRequest.builder().resourceArn(machine.stateMachineArn()).build()).tags().stream().anyMatch(tag ->
+                        tag.key().equals(tagKey)
+                )
+        ).collect(Collectors.toList());
     }
 
-    public void createUserAndVM(Participant participant) {
+    public void executeStepFunction(Participant participant) {
         SfnClient client = SfnClient.builder()
                 .region(Region.US_EAST_2)
                 .build();
@@ -48,7 +47,7 @@ public class AWSService {
         StartExecutionRequest request = StartExecutionRequest.builder()
                 .name("AttisExecution"+UUID.randomUUID().toString().substring(0,7))
                 .input("{\"Participant\": "+participantJson+"}")
-                .stateMachineArn(StepFunctionArn)
+                .stateMachineArn(stepFunctionArn)
                 .build();
 
         StartExecutionResponse executionResponse = client.startExecution(request);
