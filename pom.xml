@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>net.javajudd.attis</groupId>
 	<artifactId>attis</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
+	<version>2.0.0</version>
 	<name>attis</name>
 	<description>Amazon Cloud Training Registration Application &amp; Orchestration App</description>
 
@@ -71,19 +71,16 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.passay</groupId>
-			<artifactId>passay</artifactId>
-			<version>1.6.1</version>
-		</dependency>
 
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>iam</artifactId>
+			<artifactId>sfn</artifactId>
 		</dependency>
+
 		<dependency>
-			<groupId>software.amazon.awssdk</groupId>
-			<artifactId>ec2</artifactId>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10</version>
 		</dependency>
 
 		<dependency>

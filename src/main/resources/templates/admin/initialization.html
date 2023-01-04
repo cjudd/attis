@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link th:href="@{/css/main.css}" type="text/css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Attis Initialization</title>
+</head>
+<body>
+<form action="#" th:action="@{/init}" method="post">
+    <ul class="form-style-1">
+        <img th:src="@{/images/attis.png}"> Initialization
+        <li>
+            <h2>Step Function</h2>
+            <select th:name="stepFunctionArn">
+                <div th:each="function : ${stepFunctions}">
+                    <option th:text="${function.name}" th:value="${function.stateMachineArn}"></option>
+                </div>
+            </select>
+        </li>
+        <li>
+            <input type="submit" value="Submit">
+        </li>
+    </ul>
+</form>
+
+</body>
+</html>

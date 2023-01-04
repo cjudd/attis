@@ -25,18 +25,20 @@ public class ParticipantController {
 
     @GetMapping({"","/"})
     public String index(Participant participant) {
-        return "participant/add-participant";
+        if(aws.isStepFunctionArnInitialized()) {
+            return "participant/add-participant";
+        }
+        return "redirect:/init";
     }
 
     @PostMapping({"","/"})
-    public String addParticipant(@Valid Participant participant, BindingResult result, Model model) {
+    public String addParticipant(@Valid Participant participant, BindingResult result, Model model) throws InterruptedException {
         if (result.hasErrors()) {
             return "participant/add-participant";
         }
 
         participantRepository.save(participant);
-        aws.createIamUser(participant);
-        aws.createDevVM(participant);
+        aws.executeStepFunction(participant);
         participantRepository.save(participant);
         return "redirect:/participant/registered";
     }
