@@ -45,7 +45,7 @@ public class AWSService {
         String participantJson = new Gson().toJson(participant);
 
         StartExecutionRequest request = StartExecutionRequest.builder()
-                .name("AttisExecution-"+participant.getInitials()+"-"+UUID.randomUUID().toString().substring(0,7))
+                .name(String.format("AttisExecution-%s-%s", participant.getInitials(), UUID.randomUUID().toString().substring(0,7)))
                 .input("{\"Participant\": "+participantJson+"}")
                 .stateMachineArn(stepFunctionArn)
                 .build();
