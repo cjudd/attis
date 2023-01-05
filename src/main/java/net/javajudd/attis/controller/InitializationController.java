@@ -21,7 +21,7 @@ public class InitializationController {
         if(awsService.isStepFunctionArnInitialized()) {
             return "redirect:/participant";
         }
-        model.addAttribute("stepFunctions", awsService.getStateMachines("Cybele"));
+        model.addAttribute("stepFunctions", awsService.getStateMachines("attis"));
         return "admin/initialization";
     }
 
