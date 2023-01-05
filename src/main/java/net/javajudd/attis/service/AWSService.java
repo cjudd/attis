@@ -32,7 +32,7 @@ public class AWSService {
 
         return stateMachinesResponse.stateMachines().stream().filter(machine ->
                 client.listTagsForResource(ListTagsForResourceRequest.builder().resourceArn(machine.stateMachineArn()).build()).tags().stream().anyMatch(tag ->
-                        tag.key().equals(tagKey)
+                        tag.key().equalsIgnoreCase(tagKey)
                 )
         ).collect(Collectors.toList());
     }
