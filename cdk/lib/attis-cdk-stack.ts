@@ -27,7 +27,7 @@ export class AttisCdkStack extends Stack {
       desiredCount: 1,
       cpu: 1024,
       taskImageOptions: {
-        image: ecs.ContainerImage.fromRegistry("public.ecr.aws/g4v9z1z2/attis:latest"),
+        image: ecs.ContainerImage.fromRegistry("javajudd/attis:latest"),
         containerPort:8080,
       },
       securityGroups: [securityGroup],
@@ -41,7 +41,9 @@ export class AttisCdkStack extends Stack {
     loadBalancedFargateService.taskDefinition.addToTaskRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
-        'states:StartExecution'
+        'states:StartExecution',
+        'states:ListStateMachines',
+        'states:ListTagsForResource'
       ],
       resources: ['*']
     }));

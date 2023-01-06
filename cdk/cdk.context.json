@@ -33,5 +33,40 @@
   "security-group:account=712264709265:region=us-east-2:securityGroupName=devvm-default-sg:vpcId=vpc-04bb93e161fef010d": {
     "securityGroupId": "sg-0d140c6ae7ad5f8d1",
     "allowAllOutbound": false
+  },
+  "vpc-provider:account=690029104374:filter.isDefault=true:region=us-east-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-011cb49d58c3e268a",
+    "vpcCidrBlock": "172.31.0.0/16",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-0900ac31f8090e45c",
+            "cidr": "172.31.0.0/20",
+            "availabilityZone": "us-east-2a",
+            "routeTableId": "rtb-04a6750e51f44ca45"
+          },
+          {
+            "subnetId": "subnet-0635533e98dfc9d9e",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "us-east-2b",
+            "routeTableId": "rtb-04a6750e51f44ca45"
+          },
+          {
+            "subnetId": "subnet-0982aa10579e96153",
+            "cidr": "172.31.32.0/20",
+            "availabilityZone": "us-east-2c",
+            "routeTableId": "rtb-04a6750e51f44ca45"
+          }
+        ]
+      }
+    ]
+  },
+  "security-group:account=690029104374:region=us-east-2:securityGroupName=devvm-default-sg:vpcId=vpc-011cb49d58c3e268a": {
+    "securityGroupId": "sg-07d990c7b09c9a5aa",
+    "allowAllOutbound": true
   }
 }
