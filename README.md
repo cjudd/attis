@@ -27,9 +27,9 @@ docker run --rm -it -p80:8080 -e AWS_ACCESS_KEY_ID=<access key> -e AWS_SECRET_AC
 ```
 ### Push Docker Image to hub.docker.com
 ```
-docker push <user>/attis:<version>
-docker tag <user>/attis:<version> <user>/attis:latest
-docker push <user>/attis:latest
+docker push <hub.docker.com user>/attis:<version>
+docker tag <hub.docker.com user>/attis:<version> <user>/attis:latest
+docker push <hub.docker.com user>/attis:latest
 ```
 
 ### Example root user
